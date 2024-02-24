@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ClinicController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,10 +17,19 @@ use Illuminate\Support\Facades\Route;
  * |
  */
 
-// Roles
-Route::get('roles', [RoleController::class, 'index']);
-Route::post('create-role', [RoleController::class, 'store']);
+Route::middleware('auth:api')->group(function () {
+    // Roles
+    Route::get('roles', [RoleController::class, 'index']);
+    Route::post('create-role', [RoleController::class, 'store']);
 
-// Clinic
-Route::get('clinics', [ClinicController::class, 'index']);
-Route::post('create-clinic', [ClinicController::class, 'store']);
+    // Clinic
+    Route::get('clinics', [ClinicController::class, 'index']);
+    Route::post('create-clinic', [ClinicController::class, 'store']);
+
+    // Users
+    Route::get('users', [UserController::class, 'index']);
+    Route::post('create-user', [UserController::class, 'store']);
+    Route::put('update-user/{id}', [UserController::class, 'update']);
+});
+
+require __DIR__ . '/auth.php';
