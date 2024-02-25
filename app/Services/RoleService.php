@@ -3,11 +3,12 @@
 namespace App\Services;
 
 use App\Models\Role;
+use App\Models\User;
 use App\Repositories\Interfaces\RoleRepositoryInterface;
 
 class RoleService
 {
-    protected $roleRepository;
+    private RoleRepositoryInterface $roleRepository;
 
     public function __construct(RoleRepositoryInterface $roleRepository)
     {
@@ -19,14 +20,41 @@ class RoleService
         return $this->roleRepository->getAll();
     }
 
-    public function findById($id): Role
+    /**
+     * Get role by ID
+     *
+     * @param int $id
+     * @return Role
+     */
+    public function getRoleById(int $id): Role
     {
-        return $this->roleRepository->findById($id);
+        $role = $this->roleRepository->getRoleById($id);
+        return $role->load('permissions');
     }
 
     public function createRole(array $data): Role
     {
         $createRole = $this->roleRepository->create($data);
         return $createRole;
+    }
+
+    /**
+     * Assign a role to a user.
+     *
+     * @param User $user The user to assign the role to.
+     * @param Role $role The role to assign.
+     */
+    public function assignRole(User $user, Role $role)
+    {
+        $this->roleRepository->assignRole($user, $role);
+    }
+
+    public function getPermissionsForRole($roleName)
+    {
+        // Retrieve the role by name
+        $role = Role::where('name', $roleName)->firstOrFail();
+
+        // Return the permissions associated with the role
+        return $role->permissions;
     }
 }

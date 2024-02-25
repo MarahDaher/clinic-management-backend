@@ -1,5 +1,6 @@
 <?php
 
+use App\Config\PermissionConstants;
 use App\Http\Controllers\Api\ClinicController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
@@ -19,15 +20,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:api')->group(function () {
     // Roles
-    Route::get('roles', [RoleController::class, 'index']);
-    Route::post('create-role', [RoleController::class, 'store']);
+    Route::get('roles', [RoleController::class, 'index'])->middleware('permission:' . PermissionConstants::VIEW_ROLES);
+    Route::post('create-role', [RoleController::class, 'store'])->middleware('permission:' . PermissionConstants::CREATE_ROLE);
 
     // Clinic
     Route::get('clinics', [ClinicController::class, 'index']);
     Route::post('create-clinic', [ClinicController::class, 'store']);
 
     // Users
-    Route::get('users', [UserController::class, 'index']);
+    Route::get('users', [UserController::class, 'index'])->middleware('permission:' . PermissionConstants::VIEW_USERS);;
     Route::post('create-user', [UserController::class, 'store']);
     Route::put('update-user/{id}', [UserController::class, 'update']);
 });

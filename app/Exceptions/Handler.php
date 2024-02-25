@@ -2,7 +2,12 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Exception;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -46,5 +51,82 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function render($request, Throwable $exception)
+    {
+        if ($request->wantsJson()) {
+            return $this->handleApiException($request, $exception);
+        }
+        return parent::render($request, $exception);
+    }
+
+    private function handleApiException(Request $request, $exception)
+    {
+        $exception = $this->prepareException($exception);
+
+        if ($exception instanceof HttpResponseException) {
+            $exception = $exception->getResponse();
+        }
+
+        if ($exception instanceof AuthenticationException) {
+            $exception = $this->unauthenticated($request, $exception);
+        }
+
+        if ($exception instanceof ValidationException) {
+            $exception = $this->convertValidationExceptionToResponse($exception, $request);
+        }
+
+        return $this->customApiResponse($exception);
+    }
+
+    private function customApiResponse($exception)
+    {
+        if (method_exists($exception, 'getStatusCode')) {
+            $statusCode = $exception->getStatusCode();
+        } elseif (method_exists($exception, 'getCode') && ($exception->getCode() == '409' || $exception->getCode() == '400')) {
+            $statusCode = $exception->getCode();
+        } else {
+            $statusCode = 500;
+        }
+
+        $response = [];
+
+        switch ($statusCode) {
+            case 400:
+                $response['message'] = $exception->getMessage();
+                break;
+            case 401:
+                $response['message'] = __('Unauthorized');
+                break;
+            case 403:
+                $response['message'] = __('Forbidden');
+                break;
+            case 404:
+                $response['message'] = __('Not Found');
+                break;
+            case 405:
+                $response['message'] = __('Method Not Allowed');
+                break;
+            case 409:
+                $response['message'] = __('Duplication_Entry_Exception');
+                break;
+            case 422:
+                $response['message'] = $exception->original['message'];
+                $response['errors'] = $exception->original['errors'];
+                break;
+            default:
+                $response['message'] = ($statusCode == 500) ? __('Whoops, looks like something went wrong') : $exception->getMessage();
+                break;
+        }
+
+        if (config('app.debug') && $exception instanceof Exception) {
+            $response['trace'] = $exception->getTrace();
+            $response['code'] = $exception->getCode();
+        }
+
+        $response['status'] = $statusCode;
+
+        return response()->json($response, $statusCode);
     }
 }

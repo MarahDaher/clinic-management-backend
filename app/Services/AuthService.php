@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Config\RoleConstants;
 use App\Models\User;
 use App\Repositories\Interfaces\AuthRepositoryInterface;
 
@@ -42,13 +43,26 @@ class AuthService
     {
         $userProfile = $this->authRepository->getUserProfile();
 
-        $roleName = $userProfile->role ? $userProfile->role->name : null;
-        $clinicName = null;
+        $roleData = null;
+        $clinicData = null;
+
+        // Retrieve role data if available
+        if ($userProfile->role) {
+            $roleData = [
+                'id' => $userProfile->role->id,
+                'name' => $userProfile->role->name
+            ];
+        }
 
         // Check if the user's role is clinic_admin
-        if ($roleName === 'clinic_admin') {
-            // If so, set the clinic name
-            $clinicName = $userProfile->clinic ? $userProfile->clinic->name : null;
+        if ($userProfile->role && $userProfile->role->name === RoleConstants::CLINIC_ADMIN) {
+            // Retrieve clinic data if available
+            if ($userProfile->clinic) {
+                $clinicData = [
+                    'id' => $userProfile->clinic->id,
+                    'name' => $userProfile->clinic->name
+                ];
+            }
         }
 
         return [
@@ -57,8 +71,8 @@ class AuthService
             'user_name' => $userProfile->user_name,
             'email' => $userProfile->email,
             'phone' => $userProfile->phone,
-            'role' => $roleName,
-            'clinic_name' => $clinicName,
+            'role' => $roleData,
+            'clinic' => $clinicData
         ];
     }
 }

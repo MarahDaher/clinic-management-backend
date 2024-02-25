@@ -6,7 +6,6 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\Role\CreateRoleRequest;
 use App\Http\Resources\Role\RoleResource;
 use App\Services\RoleService;
-use Illuminate\Http\Request;
 
 class RoleController extends BaseController
 {

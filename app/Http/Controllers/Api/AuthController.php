@@ -38,6 +38,17 @@ class AuthController extends BaseController
         }
     }
 
+    public function getUserProfile(): JsonResponse
+    {
+        try {
+            $userData = $this->authService->getUserProfile();
+
+            return $this->respond($userData);
+        } catch (\Exception $e) {
+            return $this->respondError($e->getMessage(), Response::HTTP_UNAUTHORIZED);
+        }
+    }
+
     /**
      * Get the token array structure.
      *

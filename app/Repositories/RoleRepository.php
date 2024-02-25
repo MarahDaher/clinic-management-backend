@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Role;
+use App\Models\User;
 use App\Repositories\Interfaces\RoleRepositoryInterface;
 
 class RoleRepository implements RoleRepositoryInterface
@@ -12,7 +13,7 @@ class RoleRepository implements RoleRepositoryInterface
         return Role::all();
     }
 
-    public function findById($id): Role
+    public function getRoleById($id): Role
     {
         return Role::find($id);
     }
@@ -33,5 +34,10 @@ class RoleRepository implements RoleRepositoryInterface
     {
         $role = Role::findOrFail($id);
         return $role->delete();
+    }
+
+    public function assignRole(User $user, string $role): void
+    {
+        $user->assignRole($role);
     }
 }
